@@ -24,11 +24,8 @@ func main() {
 	switch c.rofi.state.val {
 	case SELECT:
 		c.copySelection()
-		// c.getLatestTextFromClipboard()
 	case DELETE:
 		c.deleteSelection()
-	default:
-		c.getLatestTextFromClipboard()
 	}
 
 	// use hot keys
