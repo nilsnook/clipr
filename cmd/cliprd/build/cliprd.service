@@ -1,0 +1,9 @@
+[Unit]
+Description=Cliprd Daemon
+
+[Service]
+ExecStart=/absolute/path/to/your/cliprd
+Restart=on-success
+
+[Install]
+WantedBy=multi-user.target
