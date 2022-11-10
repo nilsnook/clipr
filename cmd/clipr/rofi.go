@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"internal/data"
 	"os"
 	"strconv"
-	"unicode/utf8"
 )
 
 const (
@@ -58,35 +58,9 @@ func (r *rofi) initState() {
 }
 
 func (r *rofi) getSelection() (string, error) {
-	txt := r.decode(r.state.arg)
+	txt := data.RofiDecode(r.state.arg)
 	if len(txt) == 0 {
 		return txt, errors.New("Selection empty! Failed to copy to clipboard.")
 	}
 	return txt, nil
-}
-
-func (r *rofi) encode(txt string) (enctxt string) {
-	rtxt := make([]rune, 0, utf8.RuneCountInString(txt))
-	for _, ch := range txt {
-		if ch == '\n' || ch == '\r' {
-			rtxt = append(rtxt, '\xA0')
-		} else {
-			rtxt = append(rtxt, ch)
-		}
-	}
-	enctxt = string(rtxt)
-	return
-}
-
-func (r *rofi) decode(enctxt string) (txt string) {
-	ctxt := make([]rune, 0, utf8.RuneCountInString(enctxt))
-	for _, ch := range enctxt {
-		if ch == '\xA0' {
-			ctxt = append(ctxt, '\n')
-		} else {
-			ctxt = append(ctxt, ch)
-		}
-	}
-	txt = string(ctxt)
-	return
 }

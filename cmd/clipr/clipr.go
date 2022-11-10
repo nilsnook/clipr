@@ -53,13 +53,13 @@ func (c *clipr) initClipboard() {
 
 func (c *clipr) getLatestTextFromClipboard() {
 	// get latest copied text from system clipboard
-	data, err := exec.Command("xsel", "-ob").Output()
+	t, err := exec.Command("xsel", "-ob").Output()
 	if err != nil {
 		c.errorlog.Fatalln(err)
 	}
 	// replace newline (\n) or carriage return (\r) with '\xA0'
 	// before writing entry into database
-	txt := c.rofi.encode(string(data))
+	txt := data.RofiEncode(string(t))
 	c.db.Write(txt)
 }
 

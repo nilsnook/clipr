@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"unicode/utf8"
 )
 
 func resolveDir(homeDir, dir string) string {
@@ -33,5 +34,31 @@ func writeJSON(f *os.File, data Clipboard) (err error) {
 
 func readJSON(f *os.File) (data Clipboard, err error) {
 	err = json.NewDecoder(f).Decode(&data)
+	return
+}
+
+func RofiEncode(txt string) (enctxt string) {
+	rtxt := make([]rune, 0, utf8.RuneCountInString(txt))
+	for _, ch := range txt {
+		if ch == '\n' || ch == '\r' {
+			rtxt = append(rtxt, '\xA0')
+		} else {
+			rtxt = append(rtxt, ch)
+		}
+	}
+	enctxt = string(rtxt)
+	return
+}
+
+func RofiDecode(enctxt string) (txt string) {
+	ctxt := make([]rune, 0, utf8.RuneCountInString(enctxt))
+	for _, ch := range enctxt {
+		if ch == '\xA0' {
+			ctxt = append(ctxt, '\n')
+		} else {
+			ctxt = append(ctxt, ch)
+		}
+	}
+	txt = string(ctxt)
 	return
 }

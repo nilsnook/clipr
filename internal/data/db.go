@@ -4,11 +4,12 @@ import (
 	"errors"
 	"os"
 	"path"
+	"strings"
 	"time"
 )
 
 const (
-	DB_DIR  = ".local/share/clipr"
+	DB_DIR  = "~/.local/share/clipr"
 	DB_NAME = "clipr.db"
 )
 
@@ -18,11 +19,18 @@ type CliprDB struct {
 	Clipboard Clipboard
 }
 
-func NewCliprDB(dir string) (*CliprDB, error) {
+func NewCliprDB(dirs ...string) (*CliprDB, error) {
 	// get user home directory
 	userhomedir, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
+	}
+	// check for valid dir value(s)
+	dir := DB_DIR
+	if len(dirs) > 0 {
+		if len(strings.Trim(dirs[0], " ")) > 0 {
+			dir = dirs[0]
+		}
 	}
 	// resolve db dir with user home dir
 	dir = resolveDir(userhomedir, dir)

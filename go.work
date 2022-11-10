@@ -2,5 +2,6 @@ go 1.19
 
 use (
 	./cmd/clipr
+	./cmd/cliprd
 	./internal/data
 )
