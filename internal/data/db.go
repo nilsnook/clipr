@@ -14,9 +14,8 @@ const (
 )
 
 type CliprDB struct {
-	Dir       string
-	Name      string
-	Clipboard Clipboard
+	Dir  string
+	Name string
 }
 
 func NewCliprDB(dirs ...string) (*CliprDB, error) {
@@ -25,6 +24,7 @@ func NewCliprDB(dirs ...string) (*CliprDB, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	// check for valid dir value(s)
 	dir := DB_DIR
 	if len(dirs) > 0 {
@@ -32,70 +32,65 @@ func NewCliprDB(dirs ...string) (*CliprDB, error) {
 			dir = dirs[0]
 		}
 	}
-	// resolve db dir with user home dir
+
+	// resolve db dir for user home dir, if user home path exists
 	dir = resolveDir(userhomedir, dir)
+
+	// create db dir if not exists
+	if _, err = os.Stat(dir); errors.Is(err, os.ErrNotExist) {
+		err = createDirIfNotExists(dir)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// retuen new instance
 	return &CliprDB{
-		Dir:       dir,
-		Name:      DB_NAME,
-		Clipboard: Clipboard{},
+		Dir:  dir,
+		Name: DB_NAME,
 	}, nil
 }
 
-func (db *CliprDB) getDBFile(flag int) (f *os.File, err error) {
-	DB := path.Join(db.Dir, db.Name)
-	f, err = os.OpenFile(DB, flag, 0644)
-	return
-}
-
-func (db *CliprDB) CreateClipboardIfNotExists() (err error) {
-	var f *os.File
-	defer f.Close()
-
-	DB := path.Join(db.Dir, db.Name)
-	if _, err = os.Stat(DB); errors.Is(err, os.ErrNotExist) {
-		// create dir
-		err = createDirIfNotExists(db.Dir)
-		if err != nil {
-			return
-		}
-
-		// create db file
-		f, err = os.OpenFile(DB, os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			return
-		}
-		defer f.Close()
-
-		// create a clipboard and save to file
-		x := Clipboard{
-			List: []Entry{},
-		}
-		err = writeJSON(f, x)
-		if err != nil {
-			return
-		}
-	}
-	return
-}
-
-func (db *CliprDB) Read() (err error) {
+func (db *CliprDB) Read() (cb Clipboard, err error) {
 	// get db file
-	f, err := db.getDBFile(os.O_RDONLY)
+	DB := path.Join(db.Dir, db.Name)
+	f, err := os.OpenFile(DB, os.O_RDONLY, 0644)
 	if err != nil {
 		return
 	}
 	defer f.Close()
 
 	// read from db file
-	db.Clipboard, err = readJSON(f)
+	cb, err = readJSON(f)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (db *CliprDB) Write(txt string) (err error) {
+func (db *CliprDB) Write(clipboard Clipboard) (err error) {
+	// get db file
+	DB := path.Join(db.Dir, db.Name)
+	f, err := os.OpenFile(DB, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	// write changes to db file
+	err = writeJSON(f, clipboard)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (db *CliprDB) Insert(txt string) (err error) {
+	// return if empty text
+	if len(txt) == 0 {
+		return
+	}
+
 	// prepare entry from text
 	e := Entry{
 		Val: Val(txt),
@@ -103,51 +98,39 @@ func (db *CliprDB) Write(txt string) (err error) {
 			LastModified: time.Now(),
 		},
 	}
+	// read from db before every write to maintain sync
+	// with database and in-memory struct
+	clipboard, _ := db.Read()
 	// append new entry to existing clipboard
-	db.Clipboard.List = append(db.Clipboard.List, e)
+	clipboard.List = append(clipboard.List, e)
 	// create new set from clipboard entries
-	s := NewSet(db.Clipboard.List...)
+	s := NewSet(clipboard.List...)
 	// get unique set of entries
-	db.Clipboard.List = s.Entries()
+	clipboard.List = s.Entries()
 
-	// get db file
-	f, err := db.getDBFile(os.O_WRONLY)
-	if err != nil {
-		return
-	}
-	defer f.Close()
-
-	// write changes to db file
-	err = writeJSON(f, db.Clipboard)
-	if err != nil {
-		return
-	}
+	// write clipboard to DB
+	err = db.Write(clipboard)
 	return
 }
 
-func (db *CliprDB) Delete(txt string) (err error) {
+func (db *CliprDB) Delete(txt string) (size int, err error) {
 	// prepare entry from text
 	e := Entry{
 		Val: Val(txt),
 	}
+	// read from db before every write to maintain sync
+	// with database and in-memory struct
+	clipboard, _ := db.Read()
 	// create a set of existing clipboard entries
-	s := NewSet(db.Clipboard.List...)
+	s := NewSet(clipboard.List...)
 	// delete the required entry
 	s.Delete(e)
 	// get new list of entries from set
-	db.Clipboard.List = s.Entries()
+	clipboard.List = s.Entries()
+	// set current clipboard size
+	size = len(clipboard.List)
 
 	// get db file
-	f, err := db.getDBFile(os.O_WRONLY)
-	if err != nil {
-		return
-	}
-	defer f.Close()
-
-	// write changes to db file
-	err = writeJSON(f, db.Clipboard)
-	if err != nil {
-		return
-	}
+	err = db.Write(clipboard)
 	return
 }

@@ -17,8 +17,6 @@ func main() {
 
 	// create new clipr with specified log file
 	c := newClipr(f)
-	// initialize clipboard
-	c.initClipboard()
 
 	// handle rofi events
 	switch c.rofi.state.val {

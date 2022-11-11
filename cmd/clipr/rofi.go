@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"internal/data"
 	"os"
 	"strconv"
 )
@@ -58,7 +57,7 @@ func (r *rofi) initState() {
 }
 
 func (r *rofi) getSelection() (string, error) {
-	txt := data.RofiDecode(r.state.arg)
+	txt := r.state.arg
 	if len(txt) == 0 {
 		return txt, errors.New("Selection empty! Failed to copy to clipboard.")
 	}

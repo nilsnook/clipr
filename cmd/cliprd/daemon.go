@@ -29,14 +29,6 @@ func newDaemon(log *log.Logger) *daemon {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	err = db.CreateClipboardIfNotExists()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	err = db.Read()
-	if err != nil {
-		log.Fatalln(err)
-	}
 
 	// init channel for system signals
 	sigchan := make(chan os.Signal, 1)
@@ -101,7 +93,7 @@ func (d *daemon) run() {
 			d.log.Fatalln("Done.")
 		case txt := <-d.event.copy:
 			// save text to clipr database
-			err := d.db.Write(txt)
+			err := d.db.Insert(txt)
 			if err != nil {
 				d.log.Fatalln(err)
 			}
