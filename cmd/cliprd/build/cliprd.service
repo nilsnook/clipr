@@ -2,8 +2,9 @@
 Description=Cliprd Daemon
 
 [Service]
+ExecStartPre=/bin/sleep 3
 ExecStart=/absolute/path/to/your/cliprd
 Restart=on-success
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
