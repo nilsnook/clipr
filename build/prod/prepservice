@@ -1,0 +1,13 @@
+#!/bin/bash
+cat > ./build/prod/cliprd.service <<- EOS
+[Unit]
+Description=Cliprd Daemon
+
+[Service]
+ExecStartPre=/bin/sleep 3
+ExecStart=$GOBIN/cliprd
+Restart=on-success
+
+[Install]
+WantedBy=default.target
+EOS

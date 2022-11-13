@@ -1,0 +1,5 @@
+#!/bin/bash
+echo "Removing clipr daemon..."
+rm $GOBIN/cliprd
+echo "Removing clipr..."
+rm $GOBIN/clipr
