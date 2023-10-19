@@ -5,7 +5,6 @@ import (
 	"internal/data"
 	"log"
 	"os"
-	"os/exec"
 	"os/signal"
 	"syscall"
 )
@@ -63,7 +62,7 @@ func (d *daemon) handleSignals(sigs []os.Signal) {
 					os.Exit(1)
 				case syscall.SIGHUP:
 					d.log.Println("Got SIGHUP, restarting with changed configuration.")
-					// nothing to do here, because os af now there is no configuration
+					// nothing to do here, because as af now there is no configuration
 				}
 			case <-d.ctx.Done():
 				d.log.Fatalln("Done.")
@@ -75,16 +74,16 @@ func (d *daemon) handleSignals(sigs []os.Signal) {
 	}
 }
 
-func (d *daemon) getLatestTextFromClipboard() string {
-	// get latest copied text from system clipboard
-	txt, err := exec.Command("xsel", "-ob").Output()
-	if err != nil {
-		d.log.Fatalln(err)
-	}
-	// rofiEncode - replace newline (\n) or carriage return (\r) with '\xA0'
-	// before writing to database
-	return data.RofiEncode(string(txt))
-}
+// func (d *daemon) getLatestTextFromClipboard() string {
+// 	// get latest copied text from system clipboard
+// 	txt, err := exec.Command("xsel", "-ob").Output()
+// 	if err != nil {
+// 		d.log.Fatalln(err)
+// 	}
+// 	// rofiEncode - replace newline (\n) or carriage return (\r) with '\xA0'
+// 	// before writing to database
+// 	return data.RofiEncode(string(txt))
+// }
 
 func (d *daemon) run() {
 	for {

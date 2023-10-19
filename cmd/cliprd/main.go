@@ -22,7 +22,7 @@ func main() {
 	}
 	go d.handleSignals(sigs)
 	// subscribe to copy event
-	go d.event.subscribeToCopy(d.getLatestTextFromClipboard)
+	go d.event.subscribeToCopy()
 
 	// run daemon
 	d.run()
